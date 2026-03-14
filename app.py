@@ -118,10 +118,24 @@ def fetch_history_max():
     return total
 
 # ─── PREDICTION ─────────────────────────────────────────────
+def predict_recent(draws, lookback=10, n=8):
+    """Αριθμοί που εμφανίστηκαν στις τελευταίες N κληρώσεις."""
+    if len(draws) < lookback:
+        return list(range(1, n+1))
+    recent = draws[-lookback:]
+    freq = Counter(x for d in recent for x in d["numbers"])
+    # Βάρος: πιο πρόσφατη κλήρωση = μεγαλύτερο βάρος
+    weighted = Counter()
+    for i, d in enumerate(recent):
+        weight = (i + 1) / lookback  # 1/N ... N/N
+        for x in d["numbers"]:
+            weighted[x] += weight
+    return sorted([x for x, _ in weighted.most_common(n)])
+
 def predict(draws, n=8):
     if len(draws) < 20:
         return list(range(1, n+1))
-    recent = draws[-300:]  # χρησιμοποιεί τις τελευταίες 300
+    recent = draws[-300:]
     freq = Counter(x for d in recent for x in d["numbers"])
     last_seen = {}
     for i, d in enumerate(recent):
@@ -136,6 +150,10 @@ def predict(draws, n=8):
     cold = sorted(range(1,81), key=lambda x: -gaps.get(x,0))[:N]
     bal  = sorted(range(1,81), key=lambda x: -(0.5*freq.get(x,0)/mf + 0.5*gaps.get(x,0)/mg))[:N]
 
+    # Recent hot: τελευταίες 5 και 10 κληρώσεις με βάρος
+    recent5  = predict_recent(draws, lookback=5,  n=N)
+    recent10 = predict_recent(draws, lookback=10, n=N)
+
     pair = Counter()
     for d in draws[-150:]:
         ns = set(d["numbers"])
@@ -147,9 +165,12 @@ def predict(draws, n=8):
 
     votes = Counter()
     for i, x in enumerate(hot):      votes[x] += (N-i) * 1.0
-    for i, x in enumerate(cold):     votes[x] += (N-i) * 0.7
-    for i, x in enumerate(bal):      votes[x] += (N-i) * 1.3
-    for i, x in enumerate(pair_top): votes[x] += (N-i) * 0.9
+    for i, x in enumerate(cold):     votes[x] += (N-i) * 0.5
+    for i, x in enumerate(bal):      votes[x] += (N-i) * 1.0
+    for i, x in enumerate(pair_top): votes[x] += (N-i) * 0.8
+    # Μεγαλύτερο βάρος στα recent — αυτό είναι το κλειδί
+    for i, x in enumerate(recent5):  votes[x] += (N-i) * 2.5
+    for i, x in enumerate(recent10): votes[x] += (N-i) * 1.8
 
     return sorted([x for x, _ in votes.most_common(n)])
 
