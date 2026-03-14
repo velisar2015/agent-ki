@@ -156,11 +156,7 @@ footer { text-align:center;padding:13px;color:var(--muted);font-size:10px;border
 
   <!-- OFFLINE NOTICE (shown when proxy not running) -->
   <div class="offline-notice hidden" id="offline-notice">
-    ⚠️ <strong>Ο proxy server δεν τρέχει.</strong> Για να δουλέψει το dashboard:<br>
-    1. Άνοιξε Terminal / Command Prompt στον φάκελο που έχεις τα αρχεία<br>
-    2. Τρέξε: <code>python kino_proxy.py</code><br>
-    3. Ανανέωσε τη σελίδα (F5)<br><br>
-    <em>Χρειάζεται Python 3.8+ και: <code>pip install requests</code></em>
+    ⚠️ <strong>Σφάλμα σύνδεσης με τον server.</strong> Ο Render server ξεκινάει — περίμενε 30 δευτερόλεπτα και πάτα Ανανέωση.
   </div>
 
   <!-- KPIs -->
@@ -411,7 +407,7 @@ async function refresh() {
     document.getElementById("dot").classList.add("red");
     document.getElementById("status-txt").textContent="Εκτός σύνδεσης";
     log("Σφάλμα: "+e.message,"err");
-    log("→ Τρέξε: python kino_proxy.py","err");
+    log("→ Ο server ξεκινάει, περίμενε λίγο...","err");
   } finally {
     loading=false;
     document.getElementById("spin").classList.add("hidden");
