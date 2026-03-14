@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KINO Agent — Live Dashboard</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:      #0C0C1E;
+  --surface: #131328;
+  --surf2:   #1A1A38;
+  --border:  rgba(255,255,255,0.07);
+  --gold:    #E5B96A;
+  --gold2:   #F7D68A;
+  --teal:    #4CC9C0;
+  --green:   #5EC87A;
+  --red:     #E86060;
+  --muted:   #5A5A80;
+  --text:    #D8D8F0;
+  --r:       14px;
+  --ff:      'JetBrains Mono', monospace;
+  --ff2:     'Syne', sans-serif;
+}
+
+body { background:var(--bg); color:var(--text); font-family:var(--ff); font-size:13px; min-height:100vh; line-height:1.6; }
+
+/* HEADER */
+.hdr {
+  background:var(--surface); border-bottom:1px solid var(--border);
+  padding:14px 26px; display:flex; align-items:center;
+  justify-content:space-between; gap:12px; flex-wrap:wrap;
+  position:sticky; top:0; z-index:10;
+}
+.logo { font-family:var(--ff2); font-size:1.2rem; font-weight:800; color:var(--gold); letter-spacing:3px; display:flex; align-items:center; gap:9px; }
+.logo-box { width:26px;height:26px;background:var(--gold);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px; }
+.hdr-r { display:flex;align-items:center;gap:16px; }
+.status-pill { display:flex;align-items:center;gap:6px;background:rgba(94,200,122,.1);border:1px solid rgba(94,200,122,.2);border-radius:20px;padding:4px 12px;font-size:11px;color:var(--green); }
+.dot { width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s infinite; }
+.dot.red { background:var(--red);animation:none; }
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:.2} }
+.next-info { font-size:11px;color:var(--muted); }
+.next-info span { color:var(--gold2);font-weight:600; }
+.btn { background:rgba(229,185,106,.1);border:1px solid rgba(229,185,106,.25);color:var(--gold);border-radius:8px;padding:5px 13px;font-family:var(--ff);font-size:11px;cursor:pointer;transition:background .2s; }
+.btn:hover { background:rgba(229,185,106,.2); }
+
+/* LAYOUT */
+.main { max-width:1300px;margin:0 auto;padding:22px 18px; }
+.g4 { display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:18px; }
+.g21 { display:grid;grid-template-columns:1.7fr 1fr;gap:15px;margin-bottom:18px; }
+.g2 { display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:18px; }
+
+/* CARD */
+.card { background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:17px 19px; }
+.ctitle { font-family:var(--ff2);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:13px;display:flex;align-items:center;gap:7px; }
+.ctitle::before { content:'';display:block;width:3px;height:11px;background:var(--gold);border-radius:2px; }
+
+/* KPI */
+.kpi { text-align:center;padding:18px 14px;position:relative;overflow:hidden; }
+.kpi::after { content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--gold);opacity:.35; }
+.kpi-n { font-family:var(--ff2);font-size:2rem;font-weight:800;color:var(--gold2);line-height:1;margin-bottom:4px; }
+.kpi-l { font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px; }
+
+/* BALLS */
+.pred-row { display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border); }
+.pred-row:last-of-type { border-bottom:none; }
+.pred-lbl { font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;min-width:75px; }
+.balls { display:flex;gap:6px;flex-wrap:wrap; }
+.ball { width:38px;height:38px;border-radius:50%;border:1.5px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:var(--ff2);font-weight:700;font-size:13px;color:var(--gold2);background:rgba(229,185,106,.06);transition:transform .2s; }
+.ball:hover { transform:scale(1.12); }
+.ball.hit { border-color:var(--green);color:var(--green);background:rgba(94,200,122,.12);box-shadow:0 0 0 2px rgba(94,200,122,.15); }
+
+/* LIVE PANEL */
+.live-card { background:linear-gradient(135deg,var(--surf2),var(--surface));border:1px solid rgba(229,185,106,.18); }
+.live-top { display:flex;align-items:center;justify-content:space-between;margin-bottom:13px; }
+.live-id { font-family:var(--ff2);font-size:1.5rem;font-weight:800;color:var(--gold); }
+.live-time { font-size:10px;color:var(--muted);margin-top:2px; }
+.grid80 { display:grid;grid-template-columns:repeat(10,1fr);gap:4px; }
+.lb { width:100%;aspect-ratio:1;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--muted);background:var(--surf2);transition:all .3s; }
+.lb.drawn { border-color:var(--teal);color:var(--teal);background:rgba(76,201,192,.1); }
+.lb.phit { border-color:var(--green)!important;color:var(--green)!important;background:rgba(94,200,122,.15)!important;box-shadow:0 0 0 2px rgba(94,200,122,.2); }
+.hit-badge { display:inline-flex;align-items:center;gap:5px;background:rgba(94,200,122,.12);border:1px solid rgba(94,200,122,.25);color:var(--green);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600; }
+
+/* STATS TABLE */
+.stbl { width:100%;border-collapse:collapse; }
+.stbl th { font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);padding:0 8px 9px 0;text-align:left;border-bottom:1px solid var(--border); }
+.stbl td { padding:8px 8px 8px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px; }
+.stbl tr:last-child td { border-bottom:none; }
+.prog { height:4px;background:var(--surf2);border-radius:2px;overflow:hidden;width:70px;display:inline-block;vertical-align:middle;margin-left:6px; }
+.prog-fill { height:100%;background:var(--gold);border-radius:2px;transition:width .6s; }
+
+/* HEATMAP */
+.hmap { display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin-bottom:9px; }
+.hc { aspect-ratio:1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;cursor:pointer;transition:transform .15s; }
+.hc:hover { transform:scale(1.25);z-index:2; }
+.hmap-leg { display:flex;gap:14px;font-size:10px;color:var(--muted);margin-top:5px; }
+.ldot { width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:4px;vertical-align:middle; }
+
+/* HISTORY */
+.dlist { max-height:280px;overflow-y:auto; }
+.dlist::-webkit-scrollbar { width:3px; }
+.dlist::-webkit-scrollbar-thumb { background:var(--muted);border-radius:2px; }
+.di { display:grid;grid-template-columns:64px 82px 1fr;gap:7px;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px; }
+.di:last-child { border-bottom:none; }
+.di-id { color:var(--gold);font-weight:600; }
+.di-t { color:var(--muted); }
+
+/* LOG */
+.logbox { max-height:110px;overflow-y:auto; }
+.logbox::-webkit-scrollbar { width:3px; }
+.logbox::-webkit-scrollbar-thumb { background:var(--muted); }
+.ll { font-size:10px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.03);display:flex;gap:9px; }
+.lts { color:var(--teal);min-width:58px; }
+.lmsg { color:var(--muted); }
+.lmsg.ok { color:var(--green); }
+.lmsg.pred { color:var(--gold); }
+.lmsg.err { color:var(--red); }
+
+/* OFFLINE NOTICE */
+.offline-notice { background:rgba(232,96,96,.08);border:1px solid rgba(232,96,96,.25);border-radius:10px;padding:16px 20px;margin-bottom:18px;font-size:12px;line-height:1.8;color:var(--text); }
+.offline-notice code { background:var(--surf2);padding:2px 8px;border-radius:5px;color:var(--gold2); }
+
+/* SPIN */
+.spin { display:inline-block;width:13px;height:13px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.hidden { display:none; }
+
+footer { text-align:center;padding:13px;color:var(--muted);font-size:10px;border-top:1px solid var(--border); }
+
+@media(max-width:1024px) { .g4{grid-template-columns:1fr 1fr}.g21{grid-template-columns:1fr}.g2{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="logo">
+    <div class="logo-box">🎯</div>
+    KINO AGENT
+  </div>
+  <div class="hdr-r">
+    <div class="next-info">Επόμενη: <span id="countdown">--:--</span></div>
+    <div class="status-pill">
+      <div class="dot" id="dot"></div>
+      <span id="status-txt">Σύνδεση...</span>
+    </div>
+    <button class="btn" onclick="manualRefresh()">
+      <span id="spin" class="spin hidden"></span> ↻ Ανανέωση
+    </button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- OFFLINE NOTICE (shown when proxy not running) -->
+  <div class="offline-notice hidden" id="offline-notice">
+    ⚠️ <strong>Ο proxy server δεν τρέχει.</strong> Για να δουλέψει το dashboard:<br>
+    1. Άνοιξε Terminal / Command Prompt στον φάκελο που έχεις τα αρχεία<br>
+    2. Τρέξε: <code>python kino_proxy.py</code><br>
+    3. Ανανέωσε τη σελίδα (F5)<br><br>
+    <em>Χρειάζεται Python 3.8+ και: <code>pip install requests</code></em>
+  </div>
+
+  <!-- KPIs -->
+  <div class="g4">
+    <div class="card kpi">
+      <div class="kpi-n" id="kpi-total">—</div>
+      <div class="kpi-l">Κληρώσεις</div>
+    </div>
+    <div class="card kpi">
+      <div class="kpi-n" id="kpi-avg" style="color:var(--green)">—</div>
+      <div class="kpi-l">Avg Hits / 8</div>
+    </div>
+    <div class="card kpi">
+      <div class="kpi-n" id="kpi-p1" style="color:var(--teal)">—</div>
+      <div class="kpi-l">% ≥ 1 Σωστός</div>
+    </div>
+    <div class="card kpi">
+      <div class="kpi-n" id="kpi-streak" style="color:var(--gold2)">—</div>
+      <div class="kpi-l">Σερί Επιτυχιών</div>
+    </div>
+  </div>
+
+  <!-- Prediction + Live Draw -->
+  <div class="g21">
+    <div class="card">
+      <div class="ctitle">🎯 Πρόβλεψη για κλήρωση <span id="next-id" style="color:var(--gold2)">—</span></div>
+      <div id="pred-area">
+        <div style="color:var(--muted);font-size:12px;padding:18px 0;text-align:center">Φόρτωση...</div>
+      </div>
+    </div>
+    <div class="card live-card">
+      <div class="ctitle">🎲 Τελευταία Κλήρωση</div>
+      <div class="live-top">
+        <div>
+          <div class="live-id" id="live-id">#——</div>
+          <div class="live-time" id="live-time">——</div>
+        </div>
+        <div id="live-badge"></div>
+      </div>
+      <div class="grid80" id="grid80"></div>
+    </div>
+  </div>
+
+  <!-- Stats + History -->
+  <div class="g2">
+    <div class="card">
+      <div class="ctitle">📈 Στατιστικά Αποδοτικότητας</div>
+      <table class="stbl">
+        <thead><tr><th>Μέτρηση</th><th>Τιμή</th><th>Bar</th></tr></thead>
+        <tbody id="stats-body"><tr><td colspan="3" style="color:var(--muted);text-align:center;padding:16px 0">Φόρτωση...</td></tr></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="ctitle">📋 Ιστορικό Κληρώσεων</div>
+      <div class="dlist" id="dlist"><div style="color:var(--muted);text-align:center;padding:16px 0;font-size:11px">Φόρτωση...</div></div>
+    </div>
+  </div>
+
+  <!-- Heatmap -->
+  <div class="card" style="margin-bottom:18px">
+    <div class="ctitle">🌡️ Θερμότητα Αριθμών — τελ. 200 κληρώσεις (★ = προβλεπόμενοι)</div>
+    <div class="hmap" id="hmap"></div>
+    <div class="hmap-leg">
+      <span><span class="ldot" style="background:#7B1E1E"></span>Πολύ Hot</span>
+      <span><span class="ldot" style="background:#9E4A20"></span>Hot</span>
+      <span><span class="ldot" style="background:#2A2A4A"></span>Normal</span>
+      <span><span class="ldot" style="background:#1A2A55"></span>Cold</span>
+      <span><span class="ldot" style="background:#0F1A3A"></span>Πολύ Cold</span>
+    </div>
+  </div>
+
+  <!-- Log -->
+  <div class="card">
+    <div class="ctitle">📡 Activity Log</div>
+    <div class="logbox" id="logbox"></div>
+  </div>
+
+</div>
+
+<footer>
+  KINO Agent — OPAP API (api.opap.gr) — Ανανέωση κάθε 2 λεπτά —
+  ⚠️ Το KINO είναι τυχαίο παιχνίδι. Αποκλειστικά για στατιστική ανάλυση.
+</footer>
+
+<script>
+const PROXY = "";
+const REFRESH = 120000;
+const PREDICT_N = 8;
+const KINO_RANGE = 80;
+let S = { draws:[], predictions:[], results:[], total:0, nextId:null, ok:false };
+
+// ── LOG ──────────────────────────────────────────────────
+function log(msg, cls="") {
+  const box = document.getElementById("logbox");
+  const ts = new Date().toLocaleTimeString("el-GR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  const el = document.createElement("div");
+  el.className = "ll";
+  el.innerHTML = `<span class="lts">${ts}</span><span class="lmsg ${cls}">${msg}</span>`;
+  box.insertBefore(el, box.firstChild);
+  while (box.children.length > 80) box.removeChild(box.lastChild);
+}
+
+// ── FETCH ────────────────────────────────────────────────
+async function fetchState() {
+  const r = await fetch(PROXY + "/api/state", { signal: AbortSignal.timeout(8000) });
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  return r.json();
+}
+
+// ── RENDER ───────────────────────────────────────────────
+function renderKPIs() {
+  const res = S.results;
+  document.getElementById("kpi-total").textContent = S.total || S.draws.length || "—";
+  if (!res.length) return;
+  const avg = res.reduce((s,x)=>s+x.hits,0)/res.length;
+  const p1  = res.filter(x=>x.hits>=1).length/res.length*100;
+  document.getElementById("kpi-avg").textContent = avg.toFixed(2);
+  document.getElementById("kpi-p1").textContent  = p1.toFixed(1)+"%";
+  let streak = 0;
+  for (let i=res.length-1;i>=0;i--) { if(res[i].hits>=1) streak++; else break; }
+  document.getElementById("kpi-streak").textContent = streak;
+}
+
+function renderPred() {
+  const pred = S.predictions;
+  if (!pred || !pred.length) return;
+  const lastNums = new Set(S.draws.slice(-1)[0]?.numbers||[]);
+  document.getElementById("next-id").textContent = "#"+(S.nextId||"—");
+  document.getElementById("pred-area").innerHTML = `
+    <div class="pred-row">
+      <div class="pred-lbl">⚡ Combined</div>
+      <div class="balls">
+        ${pred.map(n=>`<div class="ball ${lastNums.has(n)?'hit':''}">${String(n).padStart(2,'0')}</div>`).join('')}
+      </div>
+    </div>
+    <div style="margin-top:9px;font-size:10px;color:var(--muted)">
+      Τελ. update: ${new Date().toLocaleTimeString('el-GR')} &nbsp;|&nbsp; ${S.draws.length} κληρώσεις αναλύθηκαν
+    </div>
+  `;
+}
+
+function renderLive() {
+  const last = S.draws.slice(-1)[0];
+  if (!last) return;
+  document.getElementById("live-id").textContent = "#"+last.draw_id;
+  const t = (last.draw_time||"").substring(0,16).replace("T"," ");
+  document.getElementById("live-time").textContent = t||"—";
+  const pred = new Set(S.predictions||[]);
+  document.getElementById("grid80").innerHTML =
+    Array.from({length:80},(_,i)=>{
+      const n=i+1, drawn=last.numbers.includes(n), hit=drawn&&pred.has(n);
+      return `<div class="lb ${hit?'phit':drawn?'drawn':''}">${String(n).padStart(2,'0')}</div>`;
+    }).join('');
+  const hits = (last.numbers||[]).filter(n=>pred.has(n)).length;
+  document.getElementById("live-badge").innerHTML = hits>0
+    ? `<div class="hit-badge">✓ ${hits}/${PREDICT_N}</div>`
+    : `<span style="font-size:11px;color:var(--muted)">0 σωστοί</span>`;
+}
+
+function renderStats() {
+  const res = S.results;
+  if (!res.length) { document.getElementById("stats-body").innerHTML=`<tr><td colspan="3" style="color:var(--muted);text-align:center;padding:14px 0">Χρειάζονται 30+ κληρώσεις</td></tr>`; return; }
+  const avg = res.reduce((s,x)=>s+x.hits,0)/res.length;
+  const max = Math.max(...res.map(x=>x.hits));
+  const p1  = res.filter(x=>x.hits>=1).length/res.length*100;
+  const p2  = res.filter(x=>x.hits>=2).length/res.length*100;
+  const p3  = res.filter(x=>x.hits>=3).length/res.length*100;
+  const exp = PREDICT_N * 20 / 80; // expected random
+
+  const rows=[
+    ["Αξιολογήσεις",res.length,100],
+    ["Avg hits",avg.toFixed(2)+" / "+PREDICT_N,avg/PREDICT_N*100],
+    ["Αναμενόμενο (τυχαίο)",exp.toFixed(2),exp/PREDICT_N*100],
+    ["Max hits",max,max/PREDICT_N*100],
+    ["≥ 1 σωστός",p1.toFixed(1)+"%",p1],
+    ["≥ 2 σωστοί",p2.toFixed(1)+"%",p2],
+    ["≥ 3 σωστοί",p3.toFixed(1)+"%",p3],
+  ];
+  document.getElementById("stats-body").innerHTML=rows.map(([l,v,p])=>`
+    <tr>
+      <td style="color:var(--muted)">${l}</td>
+      <td style="font-weight:600">${v}</td>
+      <td><div class="prog"><div class="prog-fill" style="width:${Math.min(p,100)}%"></div></div></td>
+    </tr>`).join('');
+}
+
+function renderHistory() {
+  const rmap={};
+  (S.results||[]).forEach(r=>rmap[r.draw_id]=r);
+  document.getElementById("dlist").innerHTML = S.draws.slice().reverse().slice(0,60).map(d=>{
+    const nums = d.numbers.slice().sort((a,b)=>a-b).slice(0,10).map(n=>String(n).padStart(2,'0')).join(' ');
+    const t = (d.draw_time||"").substring(11,16);
+    const res = rmap[d.draw_id];
+    const hspan = res ? `<span style="color:${res.hits>=2?'var(--green)':res.hits>=1?'var(--teal)':'var(--red)'}">[${res.hits}✓] </span>` : '';
+    return `<div class="di"><span class="di-id">#${d.draw_id}</span><span class="di-t">${t}</span><span style="font-size:10px;opacity:.7">${hspan}${nums}…</span></div>`;
+  }).join('');
+}
+
+function renderHeatmap() {
+  const draws = S.draws.slice(-200);
+  const freq={};
+  for(let i=1;i<=80;i++) freq[i]=0;
+  draws.forEach(d=>d.numbers.forEach(n=>freq[n]=(freq[n]||0)+1));
+  const vals=Object.values(freq);
+  const mean=vals.reduce((a,b)=>a+b,0)/vals.length||1;
+  const std=Math.sqrt(vals.reduce((s,v)=>s+(v-mean)**2,0)/vals.length)||1;
+  const pred=new Set(S.predictions||[]);
+  document.getElementById("hmap").innerHTML=Array.from({length:80},(_,i)=>{
+    const n=i+1, f=freq[n]||0, z=(f-mean)/std, p=pred.has(n);
+    let bg,co;
+    if(z>1.5){bg="#7B1E1E";co="#FFBBBB";}
+    else if(z>0.5){bg="#9E4A20";co="#FFB080";}
+    else if(z>-0.5){bg="#2A2A4A";co="#7777A0";}
+    else if(z>-1.5){bg="#1A2A55";co="#6688CC";}
+    else{bg="#0F1A3A";co="#4455BB";}
+    return `<div class="hc" style="background:${bg};color:${co};border:${p?'2px solid var(--gold)':'none'}" title="${n}: ${f} φορές${p?' ★':''}">
+      ${p?'★':n}</div>`;
+  }).join('');
+}
+
+function renderAll() { renderKPIs(); renderPred(); renderLive(); renderStats(); renderHistory(); renderHeatmap(); }
+
+// ── COUNTDOWN ───────────────────────────────────────────
+function tick() {
+  const now=new Date(), m=now.getMinutes(), s=now.getSeconds();
+  const tot=(5-(m%5))*60-s;
+  document.getElementById("countdown").textContent=`${String(Math.floor(tot/60)).padStart(2,'0')}:${String(tot%60).padStart(2,'0')}`;
+}
+
+// ── MAIN ────────────────────────────────────────────────
+let loading=false;
+async function refresh() {
+  if(loading) return;
+  loading=true;
+  document.getElementById("spin").classList.remove("hidden");
+  try {
+    const data = await fetchState();
+    S = data;
+    S.ok = true;
+    document.getElementById("offline-notice").classList.add("hidden");
+    document.getElementById("dot").classList.remove("red");
+    document.getElementById("status-txt").textContent="Ενεργός";
+    renderAll();
+    log("Ανανέωση OK — "+S.draws.length+" κληρώσεις","ok");
+  } catch(e) {
+    S.ok=false;
+    document.getElementById("offline-notice").classList.remove("hidden");
+    document.getElementById("dot").classList.add("red");
+    document.getElementById("status-txt").textContent="Εκτός σύνδεσης";
+    log("Σφάλμα: "+e.message,"err");
+    log("→ Τρέξε: python kino_proxy.py","err");
+  } finally {
+    loading=false;
+    document.getElementById("spin").classList.add("hidden");
+  }
+}
+async function manualRefresh() { log("Χειροκίνητη ανανέωση..."); await refresh(); }
+
+log("Εκκίνηση — σύνδεση στο ...");
+refresh();
+setInterval(refresh, REFRESH);
+setInterval(tick, 1000);
+tick();
+</script>
+</body>
+</html>
