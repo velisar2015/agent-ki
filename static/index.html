@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KINO Agent</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0C0C1E;--surf:#131328;--surf2:#1A1A38;--border:rgba(255,255,255,.07);
+  --gold:#E5B96A;--gold2:#F7D68A;--teal:#4CC9C0;--green:#5EC87A;--red:#E86060;--muted:#5A5A80;--text:#D8D8F0;
+  --r:14px;--ff:'JetBrains Mono',monospace;--ff2:'Syne',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--ff);font-size:13px;min-height:100vh}
+
+/* HEADER */
+.hdr{background:var(--surf);border-bottom:1px solid var(--border);padding:14px 26px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;position:sticky;top:0;z-index:10}
+.logo{font-family:var(--ff2);font-size:1.2rem;font-weight:800;color:var(--gold);letter-spacing:3px;display:flex;align-items:center;gap:9px}
+.logo-box{width:26px;height:26px;background:var(--gold);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px}
+.hdr-r{display:flex;align-items:center;gap:14px}
+.pill{display:flex;align-items:center;gap:6px;background:rgba(94,200,122,.1);border:1px solid rgba(94,200,122,.2);border-radius:20px;padding:4px 12px;font-size:11px;color:var(--green)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s infinite}
+.dot.red{background:var(--red);animation:none}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.next-info{font-size:11px;color:var(--muted)}
+.next-info span{color:var(--gold2);font-weight:600}
+.btn{background:rgba(229,185,106,.1);border:1px solid rgba(229,185,106,.25);color:var(--gold);border-radius:8px;padding:5px 13px;font-family:var(--ff);font-size:11px;cursor:pointer;transition:background .2s}
+.btn:hover{background:rgba(229,185,106,.2)}
+
+/* LAYOUT */
+.main{max-width:1300px;margin:0 auto;padding:22px 18px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:18px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:18px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;margin-bottom:18px}
+
+/* CARD */
+.card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:17px 19px}
+.ctitle{font-family:var(--ff2);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:13px;display:flex;align-items:center;gap:7px}
+.ctitle::before{content:'';display:block;width:3px;height:11px;background:var(--gold);border-radius:2px}
+
+/* KPI */
+.kpi{text-align:center;padding:18px 14px;position:relative;overflow:hidden}
+.kpi::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--gold);opacity:.35}
+.kpi-n{font-family:var(--ff2);font-size:2rem;font-weight:800;color:var(--gold2);line-height:1;margin-bottom:4px}
+.kpi-l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px}
+
+/* TABS */
+.tabs{display:flex;gap:0;margin-bottom:16px;border-radius:10px;overflow:hidden;border:1px solid var(--border)}
+.tab{flex:1;padding:10px;text-align:center;cursor:pointer;font-family:var(--ff2);font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);background:var(--surf2);transition:all .2s;border:none}
+.tab.active{background:var(--gold);color:#0C0C1E}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* BALLS */
+.balls{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:8px}
+.ball{width:40px;height:40px;border-radius:50%;border:1.5px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:var(--ff2);font-weight:700;font-size:13px;color:var(--gold2);background:rgba(229,185,106,.06);transition:transform .2s}
+.ball:hover{transform:scale(1.12)}
+.ball.hit{border-color:var(--green);color:var(--green);background:rgba(94,200,122,.12);box-shadow:0 0 0 2px rgba(94,200,122,.15)}
+.pred-meta{font-size:10px;color:var(--muted);margin-top:6px}
+
+/* LIVE PANEL */
+.live-card{background:linear-gradient(135deg,var(--surf2),var(--surf));border:1px solid rgba(229,185,106,.18)}
+.live-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px}
+.live-id{font-family:var(--ff2);font-size:1.4rem;font-weight:800;color:var(--gold)}
+.live-time{font-size:10px;color:var(--muted);margin-top:2px}
+.grid80{display:grid;grid-template-columns:repeat(10,1fr);gap:4px}
+.lb{width:100%;aspect-ratio:1;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--muted);background:var(--surf2);transition:all .3s}
+.lb.drawn{border-color:var(--teal);color:var(--teal);background:rgba(76,201,192,.1)}
+.lb.p8{border-color:var(--gold)!important;color:var(--gold)!important;background:rgba(229,185,106,.1)!important}
+.lb.p6{border-color:#CC88FF!important;color:#CC88FF!important;background:rgba(204,136,255,.1)!important}
+.lb.phit{border-color:var(--green)!important;color:var(--green)!important;background:rgba(94,200,122,.15)!important;box-shadow:0 0 0 2px rgba(94,200,122,.2)}
+.hit-badge{display:inline-flex;align-items:center;gap:5px;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:600}
+.hb-green{background:rgba(94,200,122,.12);border:1px solid rgba(94,200,122,.25);color:var(--green)}
+.hb-muted{background:var(--surf2);border:1px solid var(--border);color:var(--muted)}
+
+/* STATS TABLE */
+.stbl{width:100%;border-collapse:collapse}
+.stbl th{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);padding:0 8px 9px 0;text-align:left;border-bottom:1px solid var(--border)}
+.stbl td{padding:8px 8px 8px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px}
+.stbl tr:last-child td{border-bottom:none}
+.prog{height:4px;background:var(--surf2);border-radius:2px;overflow:hidden;width:80px;display:inline-block;vertical-align:middle;margin-left:6px}
+.prog-fill{height:100%;border-radius:2px;transition:width .6s}
+
+/* MINI CHART */
+.chart-wrap{height:80px;display:flex;align-items:flex-end;gap:2px;margin-top:8px}
+.bar{flex:1;border-radius:3px 3px 0 0;min-height:3px;transition:height .5s;position:relative;cursor:default}
+.bar:hover::after{content:attr(title);position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:var(--surf2);border:1px solid var(--border);padding:2px 6px;border-radius:4px;font-size:9px;white-space:nowrap;z-index:10}
+
+/* DIST BARS */
+.dist-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:11px}
+.dist-label{min-width:50px;color:var(--muted)}
+.dist-bar{flex:1;height:16px;background:var(--surf2);border-radius:4px;overflow:hidden}
+.dist-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:6px;font-size:10px;font-weight:600;transition:width .6s}
+
+/* HEATMAP */
+.hmap{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin-bottom:9px}
+.hc{aspect-ratio:1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;cursor:pointer;transition:transform .15s}
+.hc:hover{transform:scale(1.25);z-index:2}
+.hmap-leg{display:flex;gap:14px;font-size:10px;color:var(--muted);margin-top:5px;flex-wrap:wrap}
+.ldot{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:4px;vertical-align:middle}
+
+/* HISTORY */
+.dlist{max-height:260px;overflow-y:auto}
+.dlist::-webkit-scrollbar{width:3px}
+.dlist::-webkit-scrollbar-thumb{background:var(--muted);border-radius:2px}
+.di{display:grid;grid-template-columns:64px 80px 50px 1fr;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px}
+.di:last-child{border-bottom:none}
+.di-id{color:var(--gold);font-weight:600}
+.di-t{color:var(--muted)}
+
+/* LOG */
+.logbox{max-height:100px;overflow-y:auto}
+.logbox::-webkit-scrollbar{width:3px}
+.logbox::-webkit-scrollbar-thumb{background:var(--muted)}
+.ll{font-size:10px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.03);display:flex;gap:9px}
+.lts{color:var(--teal);min-width:58px}
+.lmsg{color:var(--muted)}
+.lmsg.ok{color:var(--green)}.lmsg.pred{color:var(--gold)}.lmsg.err{color:var(--red)}
+
+/* LEGEND */
+.legend{display:flex;gap:14px;font-size:10px;color:var(--muted);margin-top:8px;flex-wrap:wrap}
+.leg-item{display:flex;align-items:center;gap:5px}
+.leg-dot{width:10px;height:10px;border-radius:50%;border:1.5px solid}
+
+/* SPIN */
+.spin{display:inline-block;width:13px;height:13px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hidden{display:none}
+
+footer{text-align:center;padding:13px;color:var(--muted);font-size:10px;border-top:1px solid var(--border)}
+@media(max-width:1024px){.g4{grid-template-columns:1fr 1fr}.g2{grid-template-columns:1fr}.g3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="logo"><div class="logo-box">🎯</div>KINO AGENT</div>
+  <div class="hdr-r">
+    <div class="next-info">Επόμενη: <span id="countdown">--:--</span></div>
+    <div class="next-info">Κλήρωση <span id="hdr-next-id">—</span></div>
+    <div class="pill"><div class="dot" id="dot"></div><span id="status-txt">Σύνδεση...</span></div>
+    <button class="btn" onclick="manualRefresh()"><span id="spin" class="spin hidden"></span> ↻</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- KPIs -->
+  <div class="g4">
+    <div class="card kpi"><div class="kpi-n" id="kpi-total">—</div><div class="kpi-l">Κληρώσεις</div></div>
+    <div class="card kpi"><div class="kpi-n" id="kpi-avg8" style="color:var(--green)">—</div><div class="kpi-l">Avg Hits (8 αρ.)</div></div>
+    <div class="card kpi"><div class="kpi-n" id="kpi-avg6" style="color:#CC88FF">—</div><div class="kpi-l">Avg Hits (6 αρ.)</div></div>
+    <div class="card kpi"><div class="kpi-n" id="kpi-p1" style="color:var(--teal)">—</div><div class="kpi-l">% ≥1 Σωστός (8)</div></div>
+  </div>
+
+  <!-- Predictions (tabs) + Live -->
+  <div class="g2">
+
+    <div class="card">
+      <div class="ctitle">🎯 Προβλέψεις</div>
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('t8')">8 ΑΡΙΘΜΟΙ</button>
+        <button class="tab" onclick="switchTab('t6')">6 ΑΡΙΘΜΟΙ</button>
+      </div>
+
+      <div class="tab-panel active" id="tab-t8">
+        <div class="balls" id="balls8"></div>
+        <div class="pred-meta" id="meta8">—</div>
+      </div>
+      <div class="tab-panel" id="tab-t6">
+        <div class="balls" id="balls6"></div>
+        <div class="pred-meta" id="meta6">—</div>
+      </div>
+    </div>
+
+    <div class="card live-card">
+      <div class="ctitle">🎲 Τελευταία Κλήρωση</div>
+      <div class="live-top">
+        <div>
+          <div class="live-id" id="live-id">#——</div>
+          <div class="live-time" id="live-time">——</div>
+        </div>
+        <div id="live-badges" style="display:flex;flex-direction:column;gap:5px;align-items:flex-end"></div>
+      </div>
+      <div class="grid80" id="grid80"></div>
+      <div class="legend" style="margin-top:10px">
+        <div class="leg-item"><div class="leg-dot" style="border-color:var(--green);background:rgba(94,200,122,.15)"></div>Σωστός (8)</div>
+        <div class="leg-item"><div class="leg-dot" style="border-color:#CC88FF;background:rgba(204,136,255,.1)"></div>Πρόβλεψη 6</div>
+        <div class="leg-item"><div class="leg-dot" style="border-color:var(--gold);background:rgba(229,185,106,.1)"></div>Πρόβλεψη 8</div>
+        <div class="leg-item"><div class="leg-dot" style="border-color:var(--teal);background:rgba(76,201,192,.1)"></div>Κλήρωση</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="g2" style="margin-bottom:18px">
+
+    <div class="card">
+      <div class="ctitle">📈 Στατιστικά — 8 Αριθμοί</div>
+      <table class="stbl" id="stbl8">
+        <thead><tr><th>Μέτρηση</th><th>Τιμή</th><th></th></tr></thead>
+        <tbody id="stats8-body"><tr><td colspan="3" style="color:var(--muted);text-align:center;padding:14px 0">Φόρτωση...</td></tr></tbody>
+      </table>
+      <div style="margin-top:14px">
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Κατανομή Hits</div>
+        <div id="dist8"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ctitle">📈 Στατιστικά — 6 Αριθμοί</div>
+      <table class="stbl" id="stbl6">
+        <thead><tr><th>Μέτρηση</th><th>Τιμή</th><th></th></tr></thead>
+        <tbody id="stats6-body"><tr><td colspan="3" style="color:var(--muted);text-align:center;padding:14px 0">Φόρτωση...</td></tr></tbody>
+      </table>
+      <div style="margin-top:14px">
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Κατανομή Hits</div>
+        <div id="dist6"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart + History -->
+  <div class="g2">
+    <div class="card">
+      <div class="ctitle">📊 Hits ανά Κλήρωση (τελ. 50)</div>
+      <div class="chart-wrap" id="chart"></div>
+      <div style="display:flex;gap:16px;margin-top:8px;font-size:10px;color:var(--muted)">
+        <span><span style="color:var(--green)">■</span> 8 αριθμοί</span>
+        <span><span style="color:#CC88FF">■</span> 6 αριθμοί</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ctitle">📋 Ιστορικό Κληρώσεων</div>
+      <div class="dlist" id="dlist"></div>
+    </div>
+  </div>
+
+  <!-- Heatmap -->
+  <div class="card" style="margin-bottom:18px">
+    <div class="ctitle">🌡️ Θερμότητα Αριθμών (★=πρόβλεψη 8, ✦=πρόβλεψη 6)</div>
+    <div class="hmap" id="hmap"></div>
+    <div class="hmap-leg">
+      <span><span class="ldot" style="background:#7B1E1E"></span>Πολύ Hot</span>
+      <span><span class="ldot" style="background:#9E4A20"></span>Hot</span>
+      <span><span class="ldot" style="background:#2A2A4A"></span>Normal</span>
+      <span><span class="ldot" style="background:#1A2A55"></span>Cold</span>
+      <span><span class="ldot" style="background:#0F1A3A"></span>Πολύ Cold</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ctitle">📡 Activity Log</div>
+    <div class="logbox" id="logbox"></div>
+  </div>
+
+</div>
+
+<footer>KINO Agent v3 — OPAP API — Ανανέωση κάθε 2 λεπτά — ⚠️ Αποκλειστικά για στατιστική ανάλυση</footer>
+
+<script>
+const PROXY = "";
+const REFRESH = 120000;
+let S = {};
+let activeTab = 't8';
+
+function switchTab(t) {
+  activeTab = t;
+  document.querySelectorAll('.tab').forEach((el,i) => el.classList.toggle('active', (i===0&&t==='t8')||(i===1&&t==='t6')));
+  document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+}
+
+function log(msg, cls="") {
+  const box = document.getElementById("logbox");
+  const ts = new Date().toLocaleTimeString("el-GR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  const el = document.createElement("div");
+  el.className = "ll";
+  el.innerHTML = `<span class="lts">${ts}</span><span class="lmsg ${cls}">${msg}</span>`;
+  box.insertBefore(el, box.firstChild);
+  while(box.children.length > 80) box.removeChild(box.lastChild);
+}
+
+async function fetchState() {
+  const r = await fetch(PROXY+"/api/state", {signal:AbortSignal.timeout(10000)});
+  if(!r.ok) throw new Error("HTTP "+r.status);
+  return r.json();
+}
+
+function renderKPIs() {
+  document.getElementById("kpi-total").textContent = S.total_draws || "—";
+  const s8 = S.stats8 || {}, s6 = S.stats6 || {};
+  if(s8.avg) document.getElementById("kpi-avg8").textContent = s8.avg.toFixed(2);
+  if(s6.avg) document.getElementById("kpi-avg6").textContent = s6.avg.toFixed(2);
+  if(s8.pct1) document.getElementById("kpi-p1").textContent = s8.pct1+"%";
+}
+
+function renderBalls(pred, containerId, lastNums) {
+  const el = document.getElementById(containerId);
+  if(!pred||!pred.length){el.innerHTML='<span style="color:var(--muted);font-size:11px">Φόρτωση...</span>';return;}
+  el.innerHTML = pred.map(n=>`
+    <div class="ball ${lastNums.has(n)?'hit':''}">${String(n).padStart(2,'0')}</div>
+  `).join('');
+}
+
+function renderPreds() {
+  const last = (S.draws||[]).slice(-1)[0];
+  const lastNums = new Set(last?.numbers||[]);
+  const nextId = S.next_draw_id || '—';
+  document.getElementById("hdr-next-id").textContent = "#"+nextId;
+
+  renderBalls(S.pred8, 'balls8', lastNums);
+  renderBalls(S.pred6, 'balls6', lastNums);
+
+  const ts = new Date().toLocaleTimeString('el-GR');
+  document.getElementById("meta8").textContent = `Για κλήρωση #${nextId} • ${ts} • ${S.total_draws||0} κληρώσεις αναλύθηκαν`;
+  document.getElementById("meta6").textContent = `Για κλήρωση #${nextId} • ${ts} • ${S.total_draws||0} κληρώσεις αναλύθηκαν`;
+}
+
+function renderLive() {
+  const last = (S.draws||[]).slice(-1)[0];
+  if(!last) return;
+  document.getElementById("live-id").textContent = "#"+last.draw_id;
+  const t = (last.draw_time||"").substring(0,16).replace("T"," ");
+  document.getElementById("live-time").textContent = t||"—";
+
+  const p8 = new Set(S.pred8||[]);
+  const p6 = new Set(S.pred6||[]);
+
+  document.getElementById("grid80").innerHTML = Array.from({length:80},(_,i)=>{
+    const n=i+1, drawn=last.numbers.includes(n);
+    const hit = drawn && p8.has(n);
+    const inP6 = p6.has(n) && !hit;
+    const inP8 = p8.has(n) && !hit && !drawn;
+    return `<div class="lb ${hit?'phit':inP6?'p6':inP8?'p8':drawn?'drawn':''}">${String(n).padStart(2,'0')}</div>`;
+  }).join('');
+
+  const hits8 = (last.numbers||[]).filter(n=>p8.has(n)).length;
+  const hits6 = (last.numbers||[]).filter(n=>p6.has(n)).length;
+  document.getElementById("live-badges").innerHTML = `
+    <div class="hit-badge ${hits8>0?'hb-green':'hb-muted'}">8αρ: ${hits8}/8</div>
+    <div class="hit-badge ${hits6>0?'hb-green':'hb-muted'}">6αρ: ${hits6}/6</div>
+  `;
+}
+
+function renderStatsTable(stats, bodyId, color) {
+  if(!stats||!stats.n){
+    document.getElementById(bodyId).innerHTML=`<tr><td colspan="3" style="color:var(--muted);text-align:center;padding:12px 0">Χρειάζονται περισσότερες κληρώσεις</td></tr>`;
+    return;
+  }
+  const n = stats.n, exp = (bodyId.includes('8') ? 8 : 6) * 20/80;
+  const rows = [
+    ["Αξιολογήσεις", n, 100],
+    ["Avg hits", stats.avg.toFixed(2), stats.avg/(bodyId.includes('8')?8:6)*100],
+    ["Αναμενόμενο", exp.toFixed(2), exp/(bodyId.includes('8')?8:6)*100],
+    ["Max hits", stats.max, stats.max/(bodyId.includes('8')?8:6)*100],
+    ["≥1 σωστός", stats.pct1+"%", stats.pct1],
+    ["≥2 σωστοί", stats.pct2+"%", stats.pct2],
+    ["≥3 σωστοί", stats.pct3+"%", stats.pct3],
+    ["≥4 σωστοί", stats.pct4+"%", stats.pct4],
+  ];
+  document.getElementById(bodyId).innerHTML = rows.map(([l,v,p])=>`
+    <tr>
+      <td style="color:var(--muted)">${l}</td>
+      <td style="font-weight:600">${v}</td>
+      <td><div class="prog"><div class="prog-fill" style="width:${Math.min(p,100)}%;background:${color}"></div></div></td>
+    </tr>`).join('');
+}
+
+function renderDist(stats, containerId, color) {
+  if(!stats||!stats.dist){document.getElementById(containerId).innerHTML='';return;}
+  const dist = stats.dist;
+  const labels = ['0 hits','1 hit','2 hits','3 hits','4+ hits'];
+  document.getElementById(containerId).innerHTML = Object.entries(dist).map(([k,v])=>`
+    <div class="dist-row">
+      <div class="dist-label">${labels[k]}</div>
+      <div class="dist-bar">
+        <div class="dist-fill" style="width:${v}%;background:${color};color:#0C0C1E">${v>8?v+'%':''}</div>
+      </div>
+      <div style="min-width:36px;text-align:right;font-size:10px;color:var(--muted)">${v}%</div>
+    </div>`).join('');
+}
+
+function renderChart() {
+  const s8 = (S.stats8||{}).recent || [];
+  const s6 = (S.stats6||{}).recent || [];
+  const n = Math.min(s8.length, s6.length, 50);
+  if(!n){document.getElementById("chart").innerHTML='';return;}
+
+  const max8 = Math.max(...s8.slice(-n).map(r=>r.hits), 1);
+  const max6 = Math.max(...s6.slice(-n).map(r=>r.hits), 1);
+  const maxH = Math.max(max8, max6, 1);
+
+  document.getElementById("chart").innerHTML = s8.slice(-n).map((r8,i)=>{
+    const r6 = s6[s6.length - n + i];
+    const h8 = r8?.hits||0, h6 = r6?.hits||0;
+    const pct8 = (h8/maxH*100).toFixed(0), pct6 = (h6/maxH*100).toFixed(0);
+    return `<div style="flex:1;display:flex;gap:1px;align-items:flex-end;height:100%">
+      <div class="bar" style="height:${pct8}%;background:var(--green);opacity:.8" title="#${r8.draw_id}: ${h8} hits (8αρ)"></div>
+      <div class="bar" style="height:${pct6}%;background:#CC88FF;opacity:.8" title="#${(r6?.draw_id||'')}: ${h6} hits (6αρ)"></div>
+    </div>`;
+  }).join('');
+}
+
+function renderHistory() {
+  const s8map = {}, s6map = {};
+  ((S.stats8||{}).recent||[]).forEach(r=>s8map[r.draw_id]=r.hits);
+  ((S.stats6||{}).recent||[]).forEach(r=>s6map[r.draw_id]=r.hits);
+
+  document.getElementById("dlist").innerHTML = (S.draws||[]).slice().reverse().slice(0,60).map(d=>{
+    const nums = d.numbers.slice().sort((a,b)=>a-b).slice(0,10).map(n=>String(n).padStart(2,'0')).join(' ');
+    const t = (d.draw_time||"").substring(11,16);
+    const h8 = s8map[d.draw_id], h6 = s6map[d.draw_id];
+    const c8 = h8>=2?'var(--green)':h8>=1?'var(--teal)':'var(--red)';
+    const c6 = h6>=2?'var(--green)':h6>=1?'var(--teal)':'var(--red)';
+    const hits = (h8!==undefined?`<span style="color:${c8};font-size:10px">${h8}✓</span>`:'');
+    const hits6 = (h6!==undefined?`<span style="color:${c6};font-size:10px">${h6}✓</span>`:'');
+    return `<div class="di">
+      <span class="di-id">#${d.draw_id}</span>
+      <span class="di-t">${t}</span>
+      <span style="display:flex;gap:4px">${hits}${hits6}</span>
+      <span style="font-size:10px;opacity:.6">${nums}…</span>
+    </div>`;
+  }).join('');
+}
+
+function renderHeatmap() {
+  const draws = (S.draws||[]).slice(-200);
+  const freq = {};
+  for(let i=1;i<=80;i++) freq[i]=0;
+  draws.forEach(d=>d.numbers.forEach(n=>freq[n]=(freq[n]||0)+1));
+  const vals = Object.values(freq);
+  const mean = vals.reduce((a,b)=>a+b,0)/vals.length||1;
+  const mx = Math.max(...vals)||1;
+  const p8 = new Set(S.pred8||[]), p6 = new Set(S.pred6||[]);
+
+  document.getElementById("hmap").innerHTML = Array.from({length:80},(_,i)=>{
+    const n=i+1, f=freq[n]||0, z=(f-mean)/(mx-mean+1);
+    let bg,co;
+    if(z>.5){bg="#7B1E1E";co="#FFBBBB";}
+    else if(z>.1){bg="#9E4A20";co="#FFB080";}
+    else if(z>-.1){bg="#2A2A4A";co="#7777A0";}
+    else if(z>-.4){bg="#1A2A55";co="#6688CC";}
+    else{bg="#0F1A3A";co="#4455BB";}
+    const inP8=p8.has(n), inP6=p6.has(n);
+    const bc = inP8?'var(--gold)':inP6?'#CC88FF':'transparent';
+    const lbl = inP8?'★':inP6?'✦':n;
+    return `<div class="hc" style="background:${bg};color:${co};border:1.5px solid ${bc}" title="${n}: ${f} φορές${inP8?' ★8αρ':''}${inP6?' ✦6αρ':''}">${lbl}</div>`;
+  }).join('');
+}
+
+function renderAll() {
+  renderKPIs();
+  renderPreds();
+  renderLive();
+  renderStatsTable(S.stats8, 'stats8-body', 'var(--green)');
+  renderStatsTable(S.stats6, 'stats6-body', '#CC88FF');
+  renderDist(S.stats8, 'dist8', 'var(--green)');
+  renderDist(S.stats6, 'dist6', '#CC88FF');
+  renderChart();
+  renderHistory();
+  renderHeatmap();
+}
+
+function tick() {
+  const now=new Date(),m=now.getMinutes(),s=now.getSeconds();
+  const tot=(5-(m%5))*60-s;
+  document.getElementById("countdown").textContent=`${String(Math.floor(tot/60)).padStart(2,'0')}:${String(tot%60).padStart(2,'0')}`;
+}
+
+let loading=false;
+async function refresh() {
+  if(loading) return;
+  loading=true;
+  document.getElementById("spin").classList.remove("hidden");
+  try {
+    S = await fetchState();
+    document.getElementById("dot").classList.remove("red");
+    document.getElementById("status-txt").textContent="Ενεργός";
+    renderAll();
+    log(`OK — ${S.total_draws} κληρώσεις`, "ok");
+  } catch(e) {
+    document.getElementById("dot").classList.add("red");
+    document.getElementById("status-txt").textContent="Σφάλμα";
+    log("Σφάλμα: "+e.message, "err");
+  } finally {
+    loading=false;
+    document.getElementById("spin").classList.add("hidden");
+  }
+}
+async function manualRefresh(){log("Ανανέωση...");await refresh();}
+
+log("Εκκίνηση...");
+refresh();
+setInterval(refresh, REFRESH);
+setInterval(tick, 1000);
+tick();
+</script>
+</body>
+</html>
