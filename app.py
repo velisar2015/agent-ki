@@ -196,9 +196,11 @@ def health():
     return jsonify({"status": "ok", "draws": count_draws()})
 
 # ─── START ──────────────────────────────────────────────────
+# Εκτελείται και με gunicorn (module level)
+init_db()
+_bg = threading.Thread(target=background_loop, daemon=True)
+_bg.start()
+
 if __name__ == "__main__":
-    init_db()
-    t = threading.Thread(target=background_loop, daemon=True)
-    t.start()
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
