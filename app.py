@@ -180,7 +180,7 @@ def state():
     return jsonify({
         "draws":       draws[-100:],
         "predictions": pred,
-        "next_draw_id": (last.get("draw_id") or 0) + 1,
+        "next_draw_id": (draws[-1]["draw_id"] if draws else 0) + 1,
         "results":     stats[-200:],
         "total":       count_draws(),
         "server_time": datetime.now().isoformat(),
