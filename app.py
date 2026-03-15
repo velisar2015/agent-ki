@@ -200,26 +200,61 @@ def hits_distribution(stats):
 # ─── BACKGROUND LOOP ────────────────────────────────────────
 _bootstrapped = False
 
+def fetch_history_backwards():
+    """Συνεχίζει να κατεβάζει ιστορικό προς τα πίσω από το παλαιότερο draw."""
+    today = datetime.now().date()
+    oldest_id = get_oldest_draw_id()
+    total_new = 0
+    consecutive_empty = 0
+
+    # Υπολόγισε από πού να ξεκινήσει
+    # Κάθε μέρα έχει ~140 κληρώσεις
+    # oldest_draw_id - current_latest = πόσες κληρώσεις πίσω είμαστε
+    latest_id = 1281157  # περίπου το τρέχον
+    days_covered = (latest_id - (oldest_id or latest_id)) // 140
+    start_day = days_covered + 1
+
+    log.info(f"Continuing history from day -{start_day} (oldest ID: {oldest_id})")
+
+    for d in range(start_day, 730):
+        dt = today - timedelta(days=d)
+        ds = dt.strftime("%Y-%m-%d")
+        n = fetch_by_date(ds)
+        if n > 0:
+            total_new += n
+            consecutive_empty = 0
+            if total_new % 1000 == 0:
+                log.info(f"History progress: {total_new} new, total: {count_draws()}")
+        else:
+            consecutive_empty += 1
+            if consecutive_empty >= 5:
+                log.info(f"History complete. Total: {count_draws()}")
+                break
+        time.sleep(0.15)
+    return total_new
+
 def background_loop():
     global _bootstrapped
     log.info("=== Bootstrap start ===")
     try:
         current = count_draws()
         if current < 100:
-            log.info("Fetching max history...")
-            n = fetch_history_max()
-            log.info(f"Bootstrap done: {n} new draws. Total: {count_draws()}")
-        else:
-            log.info(f"Already have {current} draws, skipping full bootstrap.")
-            # Φέρνει τις τελευταίες 7 μέρες για να ενημερωθεί
+            log.info("Fetching initial history (7 days)...")
             today = datetime.now().date()
             for d in range(7, -1, -1):
                 ds = (today - timedelta(days=d)).strftime("%Y-%m-%d")
                 fetch_by_date(ds)
                 time.sleep(0.2)
+            log.info(f"Initial load done. Total: {count_draws()}")
+        else:
+            log.info(f"Have {current} draws. Will continue history in background.")
     except Exception as e:
         log.error(f"Bootstrap error: {e}")
     _bootstrapped = True
+
+    # Ξεκίνα να κατεβάζεις ιστορικό στο background
+    log.info("Starting background history download...")
+    threading.Thread(target=fetch_history_backwards, daemon=True).start()
 
     while True:
         try:
