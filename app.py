@@ -113,7 +113,7 @@ def fetch_history_max():
             consecutive_empty += 1
         d += 1
         time.sleep(0.2)
-        if d > 365:  # max 1 χρόνο πίσω
+        if d > 730:  # max 2 χρόνια πίσω (~100,000 κληρώσεις)
             break
     return total
 
@@ -280,6 +280,27 @@ def health():
         "draws":        count_draws(),
         "bootstrapped": _bootstrapped,
         "db_path":      DB_PATH,
+    })
+
+@app.route("/api/export")
+def export():
+    """Επιστρέφει όλες τις κληρώσεις ως JSON για ανάλυση."""
+    draws = get_draws(999999)
+    return jsonify({
+        "total": len(draws),
+        "draws": draws,
+    })
+
+@app.route("/api/progress")
+def progress():
+    """Πόσες κληρώσεις έχουμε κατεβάσει μέχρι τώρα."""
+    n = count_draws()
+    oldest = get_oldest_draw_id()
+    return jsonify({
+        "total_draws": n,
+        "oldest_draw_id": oldest,
+        "bootstrapped": _bootstrapped,
+        "estimated_pct": min(round(n / 100000 * 100, 1), 100),
     })
 
 # ─── START ──────────────────────────────────────────────────
